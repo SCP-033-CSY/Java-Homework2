@@ -1,0 +1,295 @@
+import java.util.Scanner;
+import java.util.ArrayList;
+
+public class FCR {
+    class LocalDate{
+        int year;
+        int month;
+        int date;
+
+        public LocalDate(int x,int y,int z){
+            year=x;
+            month=y;
+            date=z;
+        }
+        int [] Year={0,31,0,31,30,31,30,31,31,30,31,30,31};     //存储每个月天数的数组
+        //int [] NotLeapYear={0,31,28,31,30,31,30,31,31,30,31,30,31};
+
+        boolean LeapYearOrNot(){                                //判断是否闰年
+            if(year%4==0&&year%100!=0||year%400==0)
+                return true;
+            else
+                return false;
+        }
+    }
+    abstract class Drinks{                                      //抽象类
+        protected String Name;                                  //自己的名字
+        protected double Cost;                                  //成本
+        protected LocalDate DateOfProduced;                     //生产日期
+        protected int ExpirationDate;                           //保质期
+
+        public Drinks(String name, double cost,int x,int y,int z,int e)
+        {
+            System.out.println("Constructing a Drink");
+            this.Name = name;
+            this.Cost = cost;
+            this.DateOfProduced = ld(x,y,z);
+            this.ExpirationDate = e;
+        }
+
+        protected  void setName(String n){    //set函数
+            Name=n;
+        }          //set函数
+        protected void setCost(double c){
+            Cost=c;
+        }
+        protected void setDateOfProduced(LocalDate ld){
+            DateOfProduced=ld;
+        }
+        protected void setExpirationDate(int e){ ExpirationDate=e; }
+
+        protected String getName(){ return Name; }             //get函数
+        protected double getCost(){
+            return Cost;
+        }
+        protected LocalDate getDateOfProduced(){
+            return DateOfProduced;
+        }
+        protected int getExpirationDate(){
+            return ExpirationDate;
+        }
+
+        boolean Judge(LocalDate DateOfProduced,LocalDate today,int ExpirationDate){//判断当前是否过期方法 LocalDate
+            int temp = 0;
+            boolean result = false;
+            boolean x=DateOfProduced.LeapYearOrNot();
+            boolean y=today.LeapYearOrNot();
+            int d;
+            if(x){
+                if(DateOfProduced.month==2)
+                    d=29-DateOfProduced.date;
+                else
+                d=DateOfProduced.Year[DateOfProduced.month]-DateOfProduced.date;
+            }
+            else{
+                if(DateOfProduced.month==2){
+                    d=28-DateOfProduced.date;
+                }
+                else
+                d=DateOfProduced.Year[DateOfProduced.month]-DateOfProduced.date;
+            }
+            
+            if(today.year>DateOfProduced.year){
+                if(today.year-DateOfProduced.year>=2){               //间隔超过一年必定过期
+                    result=false;
+                }
+                else if(today.year-DateOfProduced.year==1){
+                    temp+=d;                                         //计算两个日期中间间隔的天数
+                    for(int i=DateOfProduced.month+1;i<=12;i++){
+                        if(i==2){
+                            if(x)
+                                temp+=29;
+                            else
+                                temp+=28;
+                        }
+                        else
+                            temp+=DateOfProduced.Year[i]; 
+                    }
+                    for(int i=1;i< today.month;i++){
+                        if(i==2){
+                            if(y)
+                                temp+=29;
+                            else
+                                temp+=28;
+                        }
+                        else
+                            temp+=today.Year[i];
+                    }
+                    if(temp>=ExpirationDate)                      //比较间隔天数和保质期的大小
+                        result= false;
+                    else
+                        result= true;
+                }
+            }
+            else if(DateOfProduced.year==today.year){
+                if(today.month==DateOfProduced.month){           //计算两个日期中间间隔的天数
+                    temp=today.date-DateOfProduced.date;
+                }
+                else{
+                    temp+=d;
+                    for(int i=DateOfProduced.month+1;i<today.month;i++){
+                        if(i==2){
+                            if(x)
+                                temp+=29;
+                            else
+                                temp+=28;
+                        }
+                        else
+                            temp+=today.Year[i];
+                    }
+                    temp+= today.date;
+                }
+                if(temp>=ExpirationDate)                       //比较间隔天数和保质期的大小
+                    result= false;
+                else
+                    result= true;
+            }
+            return  result;
+        }
+
+        public String toString(){                             //抽象的toString方法
+            return "Name:"+Name+" Cost="+Cost+
+                    " DateOfProduced:"+DateOfProduced+" ExpirationDate:"+ExpirationDate;
+        }
+
+    }
+
+    class Beer extends Drinks{
+        protected float AlcoholContent;
+
+        public Beer(String name, double cost, int x,int y,int z, int e, float a) {
+            super(name, cost, x,y,z, e);
+            this.AlcoholContent=a;
+            this.setExpirationDate();
+        }
+
+        //@Override
+        public void setExpirationDate() {
+            super.setExpirationDate(30);
+        }
+    }
+
+    class Juice extends Drinks{
+
+        public Juice(String name, double cost, LocalDate ld, int e) {
+            super(name, cost, ld, e);
+            this.setExpirationDate();
+        }
+
+        //@Override
+        public void setExpirationDate() {
+            super.setExpirationDate(2);
+        }
+    }
+
+    class SetMeal{
+        String NameOfMeal;
+        double Price;
+        String NameOfChicken;
+        Drinks Drink;                                         //具体情况多态
+
+        public SetMeal(String name,double p,String name2,Drinks d){
+            this.NameOfMeal=name;
+            this.Price=p;
+            this.NameOfChicken=name2;
+            this.Drink=d;
+        }
+
+        @Override
+        public String toString() {
+            return "Meal [NameOfMeal=" + NameOfMeal + ", Price=" + Price
+                    + ", NameOfChicken=" + NameOfMeal + ", Drink=" + Drink + "]";
+        }
+    }
+
+    interface FriedChickenRestaurant{                                        //FriedChickenRestaurant接口
+        void SetMeal(String name, double p, String name2, Drinks d);         //抽象方法：出售套餐
+        void Beer(String name, double cost, int x,int y,int z, int e, float a){    //抽象方法：批量进货
+            LocalDate ld=new LocalDate(x,y,z);
+            Beer b=new Beer(name,p,ld,e,a);
+            West2FriedChickenRestaurant.BeerList.add(b);
+        }
+        void Juice(String name, double cost, int x,int y,int z, int e){
+            LocalDate ld=new LocalDate(x,y,z);
+            Juice j=new Juice(name,p,ld,e);
+            West2FriedChickenRestaurant.JuiceList.add(j);
+        }
+    }
+                                                                           //自定义异常类，继承自RuntimeException
+    public class IngredientSortOutException extends RuntimeException{       //异常类果汁啤酒售完，告知顾客
+        void showMessage(Beer b){
+            System.out.println("the beer "+b.Name+" has been sold out");
+        }
+        void showMessage(Juice j){
+            System.out.println("the juice "+j.Name+" has been sold out");
+        }
+    }
+
+    public class OverdraftBalanceException extends RuntimeException{         //异常类进货费用超出拥有余额
+        void showMessage(int x){
+            System.out.println("balance not enough,need another "+x);
+        }
+    }
+
+    public interface West2FriedChickenRestaurant{            //West2FriedChickenRestaurant炸鸡店接口
+        float balance = 0;                                   //餐厅账目余额（判断是否买得起原料）
+        //我选择ArrayList，因为比较像数组，比较好写（划掉）
+        ArrayList BeerList = null;                               //啤酒列表，不是普通数组
+        ArrayList JuiceList = null;                              //果汁列表，不是普通数组
+        static ArrayList MealList = null;                        //套餐列表，不是普通数组
+
+        void setMealList(){
+            Scanner input=new Scanner(System.in);
+            int i=0;
+            while(Scanner.hasNextInt()){
+                String nm=input.nextLine();
+                double p=input.nextDouble();
+                String nc=input.nextLine();
+                String nd=input.nextLine();
+                double c=input.nextDouble();
+                int x=input.nextInt();
+                int y=input.nextInt();
+                int z=input.nextInt();
+                int e=input.nextInt();
+                LocalDate ld(x,y,z);
+                if(e==2){
+                    Juice j=new Juice(nd,c,ld,e);
+                    SetMeal sm=new SetMeal(nm,p,nc,j);
+                    MealList.add(sm);
+                }
+                else if(e==30){
+                    float a=input.nextFloat();
+                    Beer b=new Beer(nd,c,ld,e,a);
+                    SetMeal sm=new SetMeal(nm,p,nc,b);
+                    MealList.add(sm);
+                }
+            }
+        }
+
+        static void use(Beer b){                             //重载use函数     //不知道为什么不能用private
+            String temp;
+            int flag=0;
+            for(int i=0;BeerList[i]!=null;i++){
+                temp=BeerList[i].getName();
+                if(temp.equals(b.getName())){
+                    BeerList.remove(BeerList[i]);
+                    flag=1;
+                    break;
+                }
+            }
+            if(flag==0){
+                throw new InterruptedException(b);
+            }
+        }
+        static void use(Juice j){
+            String temp;
+            int flag=0;
+            for(int i=0;JuiceList[i]!=null;i++){
+                temp=JuiceList[i].getName();
+                if(temp.equals(j.getName())){
+                    JuiceList.remove(JuiceList[i]);
+                    flag=1;
+                    break;
+                }
+            }
+            if(flag==0){
+                throw new InterruptedException(j);
+            }
+        }
+    }
+
+    public static void main(String[] args){
+        Scanner input=new Scanner(System.in);
+    }
+
+}
