@@ -1,0 +1,67 @@
+import java.util.Scanner;
+
+public class theSum {
+
+    public static void main (String[] args) throws InterruptedException {
+        long ans = 0;
+        Scanner scanner = new Scanner(System.in);
+        int x = scanner.nextInt();
+        int n = scanner.nextInt();
+        Counter.n=n;
+        Counter.x=x;
+        Thread t1 = new MyThread1();
+        Thread t2 = new MyThread2();
+        t1.start(); // 启动新线程
+        t2.start();
+        t1.join();
+        t2.join();
+        System.out.println(Counter.count);
+    }
+
+}
+
+class Counter {
+    public static final Object lock = new Object();
+    public static int count=0;
+    public static int n;
+    public static int mid=n/2;
+    public static int x;
+
+    public static boolean contain(long num){
+        return String.valueOf(num).contains(String.valueOf(x));
+    }
+}
+
+
+
+class MyThread1 extends Thread {
+
+    public void run() {
+        for(int i=1;i<Counter.mid;i++){
+            synchronized (Counter.lock){
+                if(Counter.contain(i)){
+                    Counter.count+=i;
+                }
+            }
+        }
+    }
+}
+
+class MyThread2 extends Thread {
+
+    public void run() {
+        for(int i=Counter.mid;i<Counter.n;i++){
+            synchronized (Counter.lock){
+                if(Counter.contain(i)){
+                    Counter.count+=i;
+                }
+            }
+        }
+    }
+}
+/*
+Input:
+9 100
+Output:
+1386
+ */
